@@ -33,7 +33,7 @@ jobs:
         run: npm run build
 
       - name: Deploy to Lightsail
-        uses: easingthemes/ssh-deploy@v5
+        uses: easingthemes/ssh-deploy@v6
         with:
           SSH_PRIVATE_KEY: ${{ secrets.LIGHTSAIL_SSH_KEY }}
           REMOTE_HOST: ${{ secrets.LIGHTSAIL_HOST }}
