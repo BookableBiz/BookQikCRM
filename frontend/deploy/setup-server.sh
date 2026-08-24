@@ -9,8 +9,8 @@ set -euo pipefail
 sudo apt-get update
 sudo apt-get install -y nginx
 
-sudo mkdir -p /var/www/crm
-sudo chown -R "$USER":"$USER" /var/www/crm
+sudo mkdir -p /var/www/bookqik-crm/current
+sudo chown -R "$USER":"$USER" /var/www/bookqik-crm
 
 sudo cp nginx.conf /etc/nginx/sites-available/crm
 sudo ln -sf /etc/nginx/sites-available/crm /etc/nginx/sites-enabled/crm
@@ -23,5 +23,5 @@ sudo ufw allow OpenSSH
 sudo ufw allow 'Nginx Full'
 sudo ufw --force enable
 
-echo "Done. /var/www/crm is served by nginx on port 80."
+echo "Done. /var/www/bookqik-crm/current is served by nginx on port 80."
 echo "Point GitHub Actions' LIGHTSAIL_HOST/LIGHTSAIL_USER secrets at this box (user: ubuntu)."

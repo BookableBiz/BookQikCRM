@@ -39,5 +39,5 @@ jobs:
           REMOTE_HOST: ${{ secrets.LIGHTSAIL_HOST }}
           REMOTE_USER: ${{ secrets.LIGHTSAIL_USER }}
           SOURCE: 'frontend/dist/'
-          TARGET: '/var/www/crm/'
+          TARGET: '/var/www/bookqik-crm/current/'
           ARGS: '-rltgoDzvc --delete'
