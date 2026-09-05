@@ -42,3 +42,40 @@ export interface LeadNote {
   addedby: string
   content: string
 }
+
+export interface VendorCategory {
+  id: number
+  name: string
+}
+
+export interface Vendor {
+  id: number
+  name: string
+  email: string
+  phone: string | null
+  status: number
+  business_name: string | null
+  category: string | null
+  category_id: number | null
+  plan_name: string | null
+  created_at: string
+}
+
+export interface VendorMonthCount {
+  month: string
+  count: number
+}
+
+export interface VendorCategoryCount {
+  category_id: number
+  category: string
+  count: number
+}
+
+export interface VendorSummary {
+  total: number
+  active: number
+  this_month: number
+  by_month: VendorMonthCount[]
+  by_category: VendorCategoryCount[]
+}
