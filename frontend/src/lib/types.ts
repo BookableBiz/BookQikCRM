@@ -79,3 +79,27 @@ export interface VendorSummary {
   by_month: VendorMonthCount[]
   by_category: VendorCategoryCount[]
 }
+
+export type AssetCampaignBucket = 'not_started' | 'in_progress' | 'approved'
+
+export type AssetType = 'qr' | 'decal_door' | 'welcome_desk_poster' | 'large_poster'
+
+export interface VendorAssetsCampaignRow {
+  id: number
+  name: string
+  business_name: string | null
+  assets: Record<AssetType, boolean>
+  approved: boolean
+  approved_by: string | null
+  approved_at: string | null
+  audit_note: string | null
+}
+
+export interface AssetsCampaignSummary {
+  vendor_count: number
+  placed_total: number
+  placed_possible: number
+  approved_count: number
+  flagged_count: number
+  buckets: Record<AssetCampaignBucket, number>
+}

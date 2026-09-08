@@ -5,6 +5,7 @@ import LeadsPage from '../pages/LeadsPage'
 import TasksPage from '../pages/TasksPage'
 import NotesPage from '../pages/NotesPage'
 import VendorsPage from '../pages/VendorsPage'
+import AssetsCampaignPage from '../pages/AssetsCampaignPage'
 import DashboardLayout from '../components/layout/DashboardLayout'
 import { ProtectedRoute } from '../lib/auth'
 
@@ -28,6 +29,7 @@ const router = createBrowserRouter([
       { index: true, element: <DashboardPage /> },
       { path: 'leads', element: <LeadsPage /> },
       { path: 'vendors', element: <VendorsPage /> },
+      { path: 'assets-campaign', element: <AssetsCampaignPage /> },
       { path: 'tasks', element: <TasksPage /> },
       { path: 'notes', element: <NotesPage /> },
     ],
