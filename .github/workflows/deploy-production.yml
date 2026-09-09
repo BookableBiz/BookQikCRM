@@ -1,17 +1,18 @@
-name: Deploy BookQik Frontend
+name: Deploy Frontend (Production)
 
 on:
   push:
     branches:
       - production
 
+  workflow_dispatch:
+
 jobs:
   deploy:
     runs-on: ubuntu-latest
 
     steps:
-
-      - name: Deploy to server
+      - name: Deploy Frontend
         uses: appleboy/ssh-action@v1.2.0
         with:
           host: ${{ secrets.SERVER_HOST }}
