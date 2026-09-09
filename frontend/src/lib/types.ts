@@ -88,6 +88,7 @@ export interface VendorAssetsCampaignRow {
   id: number
   name: string
   business_name: string | null
+  pincode: string | null
   assets: Record<AssetType, boolean>
   approved: boolean
   approved_by: string | null
