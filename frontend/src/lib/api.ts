@@ -78,6 +78,47 @@ export async function apiRequest<T = unknown>(
   }
 }
 
+// File exports (PDF/CSV) return a raw file body rather than the {status, data} JSON
+// envelope apiRequest expects, so they need their own fetch -> blob -> save flow.
+export async function apiDownload(path: string, fallbackFilename: string): Promise<void> {
+  const headers: Record<string, string> = {}
+  const token = localStorage.getItem(TOKEN_STORAGE_KEY)
+  if (token) headers.Authorization = `Bearer ${token}`
+
+  activeRequestCount += 1
+  notifyActiveRequestListeners()
+
+  try {
+    const response = await fetch(`${API_BASE_URL}${path}`, { headers })
+
+    if (!response.ok) {
+      const contentType = response.headers.get('Content-Type') ?? ''
+      if (contentType.includes('application/json')) {
+        const result = (await response.json()) as ApiResponse
+        throw new ApiError(result.message || 'Download failed', result.status_code ?? response.status)
+      }
+      throw new ApiError('Download failed', response.status)
+    }
+
+    const disposition = response.headers.get('Content-Disposition') ?? ''
+    const filenameMatch = disposition.match(/filename="?([^";]+)"?/)
+    const filename = filenameMatch?.[1] ?? fallbackFilename
+
+    const blob = await response.blob()
+    const url = URL.createObjectURL(blob)
+    const link = document.createElement('a')
+    link.href = url
+    link.download = filename
+    document.body.appendChild(link)
+    link.click()
+    link.remove()
+    URL.revokeObjectURL(url)
+  } finally {
+    activeRequestCount -= 1
+    notifyActiveRequestListeners()
+  }
+}
+
 export function setAuthToken(token: string) {
   localStorage.setItem(TOKEN_STORAGE_KEY, token)
 }
