@@ -1,5 +1,9 @@
 import { useEffect, useRef, useState } from 'react'
+<<<<<<< HEAD
 import { apiDownload, apiRequest, ApiError } from '../lib/api'
+=======
+import { apiRequest, ApiError } from '../lib/api'
+>>>>>>> 713ef3844fda33f19e2042e0d822da02510fa6d5
 import type {
   AssetCampaignBucket,
   AssetsCampaignSummary,
@@ -37,6 +41,7 @@ function hasAnyAssetPlaced(row: VendorAssetsCampaignRow) {
   return Object.values(row.assets).some(Boolean)
 }
 
+<<<<<<< HEAD
 // Shared by the list fetch and the export download so an exported report can never
 // silently drift from what the current tab/search box is actually showing on screen.
 function buildFilterParams(bucket: AssetCampaignBucket, debouncedSearch: string) {
@@ -46,6 +51,8 @@ function buildFilterParams(bucket: AssetCampaignBucket, debouncedSearch: string)
   return params
 }
 
+=======
+>>>>>>> 713ef3844fda33f19e2042e0d822da02510fa6d5
 function toRowState(row: VendorAssetsCampaignRow): RowState {
   return { ...row, noteDraft: row.audit_note ?? '', savingNote: false, noteError: null, pendingUnapprove: false }
 }
@@ -78,7 +85,10 @@ export default function AssetsCampaignPage() {
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const [reloadToken, setReloadToken] = useState(0)
+<<<<<<< HEAD
   const [exporting, setExporting] = useState<'pdf' | 'excel' | null>(null)
+=======
+>>>>>>> 713ef3844fda33f19e2042e0d822da02510fa6d5
 
   useEffect(() => {
     const timer = setTimeout(() => setDebouncedSearch(search.trim()), 350)
@@ -113,7 +123,13 @@ export default function AssetsCampaignPage() {
   useEffect(() => {
     const controller = new AbortController()
 
+<<<<<<< HEAD
     const params = buildFilterParams(bucket, debouncedSearch)
+=======
+    const params = new URLSearchParams()
+    params.set('bucket', bucket)
+    if (debouncedSearch) params.set('search', debouncedSearch)
+>>>>>>> 713ef3844fda33f19e2042e0d822da02510fa6d5
     params.set('page', String(page))
 
     const filterKey = `${bucket}|${debouncedSearch}|${page}`
@@ -148,6 +164,7 @@ export default function AssetsCampaignPage() {
     setReloadToken((t) => t + 1)
   }
 
+<<<<<<< HEAD
   // A PDF export can take a while to generate server-side; guard against updating state
   // after the admin has already navigated away from this page.
   const isMountedRef = useRef(true)
@@ -178,6 +195,8 @@ export default function AssetsCampaignPage() {
     }
   }
 
+=======
+>>>>>>> 713ef3844fda33f19e2042e0d822da02510fa6d5
   async function togglePlacement(vendorId: number, assetType: AssetType, next: boolean) {
     setRowStates((prev) =>
       prev.map((r) => (r.id === vendorId ? { ...r, assets: { ...r.assets, [assetType]: next } } : r)),
@@ -316,6 +335,7 @@ export default function AssetsCampaignPage() {
           <input
             value={search}
             onChange={(e) => setSearch(e.target.value)}
+<<<<<<< HEAD
             placeholder="e.g. Ram or 1234"
             className="rounded-md border border-slate-300 px-3 py-2 text-sm outline-none focus:border-slate-500 focus:ring-1 focus:ring-slate-500"
           />
@@ -338,6 +358,12 @@ export default function AssetsCampaignPage() {
             {exporting === 'pdf' ? 'Preparing…' : 'Download PDF'}
           </button>
         </div>
+=======
+            placeholder="e.g. Sneha or 1234"
+            className="rounded-md border border-slate-300 px-3 py-2 text-sm outline-none focus:border-slate-500 focus:ring-1 focus:ring-slate-500"
+          />
+        </div>
+>>>>>>> 713ef3844fda33f19e2042e0d822da02510fa6d5
       </div>
 
       <div className="flex gap-1 border-b border-slate-200">
@@ -368,7 +394,10 @@ export default function AssetsCampaignPage() {
             <tr>
               <th className="px-4 py-3 font-medium">ID</th>
               <th className="px-4 py-3 font-medium">Vendor</th>
+<<<<<<< HEAD
               <th className="px-4 py-3 font-medium">Pincode</th>
+=======
+>>>>>>> 713ef3844fda33f19e2042e0d822da02510fa6d5
               {ASSET_TYPES.map((at) => (
                 <th key={at.key} className="min-w-[120px] px-4 py-3 font-medium">
                   {at.label}
@@ -385,7 +414,10 @@ export default function AssetsCampaignPage() {
                   <div className="font-medium text-slate-900">{row.name}</div>
                   <div className="text-xs text-slate-500">{row.business_name ?? '—'}</div>
                 </td>
+<<<<<<< HEAD
                 <td className="px-4 py-3 align-top text-slate-700">{row.pincode ?? '—'}</td>
+=======
+>>>>>>> 713ef3844fda33f19e2042e0d822da02510fa6d5
                 {ASSET_TYPES.map((at) => (
                   <td key={at.key} className="px-4 py-3 align-top">
                     <label className="flex cursor-pointer items-center gap-2 text-slate-700">
@@ -437,7 +469,11 @@ export default function AssetsCampaignPage() {
 
             {!loading && rowStates.length === 0 && (
               <tr>
+<<<<<<< HEAD
                 <td colSpan={8} className="px-4 py-8 text-center text-sm text-slate-500">
+=======
+                <td colSpan={7} className="px-4 py-8 text-center text-sm text-slate-500">
+>>>>>>> 713ef3844fda33f19e2042e0d822da02510fa6d5
                   No vendors in this stage right now.
                 </td>
               </tr>
