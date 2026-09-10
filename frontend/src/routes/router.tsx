@@ -2,8 +2,9 @@ import { createBrowserRouter, Navigate } from 'react-router-dom'
 import LoginPage from '../pages/LoginPage'
 import DashboardPage from '../pages/DashboardPage'
 import LeadsPage from '../pages/LeadsPage'
+import VendorLeadDetailPage from '../pages/VendorLeadDetailPage'
 import TasksPage from '../pages/TasksPage'
-import NotesPage from '../pages/NotesPage'
+import StaffPage from '../pages/StaffPage'
 import VendorsPage from '../pages/VendorsPage'
 import AssetsCampaignPage from '../pages/AssetsCampaignPage'
 import DashboardLayout from '../components/layout/DashboardLayout'
@@ -28,10 +29,11 @@ const router = createBrowserRouter([
     children: [
       { index: true, element: <DashboardPage /> },
       { path: 'leads', element: <LeadsPage /> },
+      { path: 'leads/:id', element: <VendorLeadDetailPage /> },
       { path: 'vendors', element: <VendorsPage /> },
       { path: 'assets-campaign', element: <AssetsCampaignPage /> },
       { path: 'tasks', element: <TasksPage /> },
-      { path: 'notes', element: <NotesPage /> },
+      { path: 'staff', element: <StaffPage /> },
     ],
   },
 ])

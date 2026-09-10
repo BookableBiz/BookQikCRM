@@ -119,6 +119,34 @@ export async function apiDownload(path: string, fallbackFilename: string): Promi
   }
 }
 
+// Multipart file upload (e.g. CSV import) - apiRequest always JSON-encodes its body,
+// which doesn't work for a File, so this builds its own FormData request instead.
+export async function apiUpload<T = unknown>(path: string, file: File): Promise<ApiResponse<T>> {
+  const headers: Record<string, string> = {}
+  const token = localStorage.getItem(TOKEN_STORAGE_KEY)
+  if (token) headers.Authorization = `Bearer ${token}`
+
+  const formData = new FormData()
+  formData.append('file', file)
+
+  activeRequestCount += 1
+  notifyActiveRequestListeners()
+
+  try {
+    const response = await fetch(`${API_BASE_URL}${path}`, { method: 'POST', headers, body: formData })
+    const result = (await response.json()) as ApiResponse<T>
+
+    if (!result.status) {
+      throw new ApiError(result.message || 'Upload failed', result.status_code ?? response.status)
+    }
+
+    return result
+  } finally {
+    activeRequestCount -= 1
+    notifyActiveRequestListeners()
+  }
+}
+
 export function setAuthToken(token: string) {
   localStorage.setItem(TOKEN_STORAGE_KEY, token)
 }
