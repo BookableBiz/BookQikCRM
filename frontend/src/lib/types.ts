@@ -5,6 +5,32 @@ export interface CrmStaff {
   role: string
 }
 
+// Mapped access levels returned by /crm/v1/login (see backend CrmAuthService::ACCESS_LEVELS):
+// admin -> 'super_admin', manager -> 'admin', sales -> 'sales'.
+export function canManageLeads(staff: CrmStaff | null): boolean {
+  return staff?.role !== 'sales'
+}
+
+export function isAdmin(staff: CrmStaff | null): boolean {
+  return staff?.role === 'super_admin'
+}
+
+export type CrmRole = 'admin' | 'manager' | 'sales'
+
+export const CRM_ROLES: { value: CrmRole; label: string }[] = [
+  { value: 'admin', label: 'Admin' },
+  { value: 'manager', label: 'Manager' },
+  { value: 'sales', label: 'Sales' },
+]
+
+export interface CrmStaffMember {
+  id: number
+  name: string
+  email: string
+  role: string
+  status?: number
+}
+
 export interface Paginated<T> {
   data: T[]
   total: number
@@ -13,34 +39,79 @@ export interface Paginated<T> {
   last_page: number
 }
 
+export type LeadSource = 'justdial' | 'google_my_business' | 'direct_visit' | 'meta_ads' | 'google_ads' | 'other'
+
+export type LeadStatus = 'new' | 'contacted' | 'qualified' | 'converted' | 'lost'
+
+export const LEAD_STATUSES: { value: LeadStatus; label: string }[] = [
+  { value: 'new', label: 'New' },
+  { value: 'contacted', label: 'Contacted' },
+  { value: 'qualified', label: 'Qualified' },
+  { value: 'converted', label: 'Converted' },
+  { value: 'lost', label: 'Lost' },
+]
+
+export const LEAD_SOURCES: { value: LeadSource; label: string }[] = [
+  { value: 'justdial', label: 'JustDial' },
+  { value: 'google_my_business', label: 'Google My Business' },
+  { value: 'direct_visit', label: 'Direct Visit' },
+  { value: 'meta_ads', label: 'Meta Ads' },
+  { value: 'google_ads', label: 'Google Ads' },
+  { value: 'other', label: 'Other' },
+]
+
+export interface LeadNoteEntry {
+  content: string
+  added_by: number
+  added_at: string
+}
+
+export interface LeadVisitEntry {
+  visited_by: number
+  visited_at: string
+  notes: string | null
+}
+
 export interface Lead {
   id: number
-  email: string
-  role: string
   name: string
+  email: string | null
   phone: string
-  sources: string
-  message: string | null
-  status: number
+  business_name: string | null
+  category_id: number | null
+  city: string
+  address: string | null
+  source: LeadSource
+  source_detail: string | null
+  status: LeadStatus
+  assigned_to: number | null
+  created_by: number | null
+  converted_vendor_id: number | null
+  notes: LeadNoteEntry[]
+  visits: LeadVisitEntry[]
+  tasks?: LeadTask[]
   created_at: string
+}
+
+export interface LeadImportRowIssue {
+  row: number
+  reason: string
+}
+
+export interface LeadImportResult {
+  imported: number
+  skipped: LeadImportRowIssue[]
+  errors: LeadImportRowIssue[]
 }
 
 export interface LeadTask {
   id: number
-  leadname: string
-  lead_id: number
-  assign: string
-  tasktype: string
-  duedate: string
+  vendor_lead_id: number
+  lead?: { id: number; name: string }
+  task_type: string
+  due_date: string
+  assigned_to: number | null
   status: number
-}
-
-export interface LeadNote {
-  id: number
-  leadname: string
-  lead_id: number
-  addedby: string
-  content: string
 }
 
 export interface VendorCategory {
