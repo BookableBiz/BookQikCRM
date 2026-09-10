@@ -1,17 +1,20 @@
 import { NavLink, Outlet } from 'react-router-dom'
 import { useAuth } from '../../lib/auth'
+import { isAdmin } from '../../lib/types'
 
 const navItems = [
   { to: '/dashboard', label: 'Dashboard', end: true },
-  { to: '/dashboard/leads', label: 'Leads', end: false },
+  { to: '/dashboard/leads', label: 'Vendor Leads', end: false },
   { to: '/dashboard/vendors', label: 'Vendors', end: false },
   { to: '/dashboard/assets-campaign', label: 'Assets Campaign', end: false },
   { to: '/dashboard/tasks', label: 'Tasks', end: false },
-  { to: '/dashboard/notes', label: 'Notes', end: false },
 ]
+
+const adminNavItems = [{ to: '/dashboard/staff', label: 'CRM Staff', end: false }]
 
 export default function DashboardLayout() {
   const { staff, logout } = useAuth()
+  const items = isAdmin(staff) ? [...navItems, ...adminNavItems] : navItems
 
   return (
     <div className="flex min-h-svh bg-slate-50">
@@ -19,7 +22,7 @@ export default function DashboardLayout() {
         <div className="px-5 py-5 text-lg font-bold text-slate-900">BookableCRM</div>
 
         <nav className="flex flex-1 flex-col gap-1 px-3">
-          {navItems.map((item) => (
+          {items.map((item) => (
             <NavLink
               key={item.to}
               to={item.to}
