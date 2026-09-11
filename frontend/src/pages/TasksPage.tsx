@@ -1,16 +1,13 @@
 import { useEffect, useState } from 'react'
 import { Link } from 'react-router-dom'
 import { apiRequest, ApiError } from '../lib/api'
-import type { CrmStaffMember, LeadTask, Paginated } from '../lib/types'
+import { TaskStatusSelect, taskStatusLabel } from '../components/TaskStatusSelect'
+import { TASK_STATUSES, type CrmStaffMember, type LeadTask, type Paginated, type TaskStatus } from '../lib/types'
 
 const inputClass =
   'rounded-md border border-slate-300 px-3 py-2 text-sm outline-none focus:border-slate-500 focus:ring-1 focus:ring-slate-500'
 
-const STATUS_OPTIONS = [
-  { value: '', label: 'All statuses' },
-  { value: '0', label: 'Pending' },
-  { value: '1', label: 'Completed' },
-]
+const STATUS_OPTIONS = [{ value: '', label: 'All statuses' }, ...TASK_STATUSES]
 
 function staffLabel(staff: CrmStaffMember[], id: number | null) {
   if (!id) return '—'
@@ -24,10 +21,10 @@ function TaskRow({ task, staff, onSaved }: { task: LeadTask; staff: CrmStaffMemb
   const [assignedTo, setAssignedTo] = useState(String(task.assigned_to ?? ''))
   const [saving, setSaving] = useState(false)
 
-  async function handleToggleStatus() {
+  async function handleStatusChange(status: TaskStatus) {
     setSaving(true)
     try {
-      await apiRequest(`/crm/v1/tasks/${task.id}`, { method: 'PUT', body: { status: task.status === 1 ? 0 : 1 } })
+      await apiRequest(`/crm/v1/tasks/${task.id}`, { method: 'PUT', body: { status } })
       onSaved()
     } catch (err) {
       alert(err instanceof ApiError ? err.message : 'Failed to update task.')
@@ -73,7 +70,7 @@ function TaskRow({ task, staff, onSaved }: { task: LeadTask; staff: CrmStaffMemb
         <td className="px-4 py-3">
           <input type="date" value={dueDate} onChange={(e) => setDueDate(e.target.value)} className={inputClass} />
         </td>
-        <td className="px-4 py-3 text-slate-600">{task.status === 1 ? 'Completed' : 'Pending'}</td>
+        <td className="px-4 py-3 text-slate-600">{taskStatusLabel(task.status)}</td>
         <td className="px-4 py-3 text-right">
           <div className="flex justify-end gap-2">
             <button type="button" disabled={saving} onClick={handleSaveEdit} className="text-xs font-medium text-slate-900 hover:underline">
@@ -98,12 +95,11 @@ function TaskRow({ task, staff, onSaved }: { task: LeadTask; staff: CrmStaffMemb
       <td className="px-4 py-3 text-slate-600">{task.task_type}</td>
       <td className="px-4 py-3 text-slate-600">{staffLabel(staff, task.assigned_to)}</td>
       <td className="px-4 py-3 text-slate-600">{task.due_date}</td>
-      <td className="px-4 py-3 text-slate-600">{task.status === 1 ? 'Completed' : 'Pending'}</td>
+      <td className="px-4 py-3 text-slate-600">
+        <TaskStatusSelect value={task.status} disabled={saving} onChange={handleStatusChange} />
+      </td>
       <td className="px-4 py-3 text-right">
         <div className="flex justify-end gap-3">
-          <button type="button" disabled={saving} onClick={handleToggleStatus} className="text-xs font-medium text-slate-600 hover:text-slate-900">
-            {task.status === 1 ? 'Mark pending' : 'Mark complete'}
-          </button>
           <button type="button" onClick={() => setEditing(true)} className="text-xs font-medium text-slate-600 hover:text-slate-900">
             Edit
           </button>

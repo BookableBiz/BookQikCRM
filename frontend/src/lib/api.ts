@@ -147,6 +147,40 @@ export async function apiUpload<T = unknown>(path: string, file: File): Promise<
   }
 }
 
+// Same as apiUpload, but for endpoints that need a file alongside other fields
+// (e.g. logging a visit with notes/GPS coordinates plus an optional photo).
+export async function apiUploadForm<T = unknown>(
+  path: string,
+  fields: Record<string, string | number | Blob | null | undefined>,
+): Promise<ApiResponse<T>> {
+  const headers: Record<string, string> = {}
+  const token = localStorage.getItem(TOKEN_STORAGE_KEY)
+  if (token) headers.Authorization = `Bearer ${token}`
+
+  const formData = new FormData()
+  for (const [key, value] of Object.entries(fields)) {
+    if (value === null || value === undefined) continue
+    formData.append(key, value instanceof Blob ? value : String(value))
+  }
+
+  activeRequestCount += 1
+  notifyActiveRequestListeners()
+
+  try {
+    const response = await fetch(`${API_BASE_URL}${path}`, { method: 'POST', headers, body: formData })
+    const result = (await response.json()) as ApiResponse<T>
+
+    if (!result.status) {
+      throw new ApiError(result.message || 'Request failed', result.status_code ?? response.status)
+    }
+
+    return result
+  } finally {
+    activeRequestCount -= 1
+    notifyActiveRequestListeners()
+  }
+}
+
 export function setAuthToken(token: string) {
   localStorage.setItem(TOKEN_STORAGE_KEY, token)
 }

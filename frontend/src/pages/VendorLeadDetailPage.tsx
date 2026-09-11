@@ -1,7 +1,8 @@
 import { useEffect, useState, type FormEvent } from 'react'
 import { Link, useParams } from 'react-router-dom'
-import { apiRequest, ApiError } from '../lib/api'
-import { LEAD_SOURCES, LEAD_STATUSES, type CrmStaffMember, type Lead, type LeadStatus, type LeadTask } from '../lib/types'
+import { apiRequest, apiUploadForm, ApiError } from '../lib/api'
+import { TaskStatusSelect } from '../components/TaskStatusSelect'
+import { LEAD_SOURCES, LEAD_STATUSES, type CrmStaffMember, type Lead, type LeadStatus, type LeadTask, type TaskStatus } from '../lib/types'
 
 const inputClass =
   'rounded-md border border-slate-300 px-3 py-2 text-sm outline-none focus:border-slate-500 focus:ring-1 focus:ring-slate-500'
@@ -80,10 +81,10 @@ function TaskRow({ task, staff, onSaved }: { task: LeadTask; staff: CrmStaffMemb
   const [assignedTo, setAssignedTo] = useState(String(task.assigned_to ?? ''))
   const [saving, setSaving] = useState(false)
 
-  async function handleToggleStatus() {
+  async function handleStatusChange(status: TaskStatus) {
     setSaving(true)
     try {
-      await apiRequest(`/crm/v1/tasks/${task.id}`, { method: 'PUT', body: { status: task.status === 1 ? 0 : 1 } })
+      await apiRequest(`/crm/v1/tasks/${task.id}`, { method: 'PUT', body: { status } })
       onSaved()
     } catch (err) {
       alert(err instanceof ApiError ? err.message : 'Failed to update task.')
@@ -145,12 +146,11 @@ function TaskRow({ task, staff, onSaved }: { task: LeadTask; staff: CrmStaffMemb
       <td className="py-2 text-slate-900">{task.task_type}</td>
       <td className="py-2 text-slate-600">{task.due_date}</td>
       <td className="py-2 text-slate-600">{staffLabel(staff, task.assigned_to)}</td>
-      <td className="py-2 text-slate-600">{task.status === 1 ? 'Completed' : 'Pending'}</td>
+      <td className="py-2 text-slate-600">
+        <TaskStatusSelect value={task.status} disabled={saving} onChange={handleStatusChange} />
+      </td>
       <td className="py-2 text-right">
         <div className="flex justify-end gap-3">
-          <button type="button" disabled={saving} onClick={handleToggleStatus} className="text-xs font-medium text-slate-600 hover:text-slate-900">
-            {task.status === 1 ? 'Mark pending' : 'Mark complete'}
-          </button>
           <button type="button" onClick={() => setEditing(true)} className="text-xs font-medium text-slate-600 hover:text-slate-900">
             Edit
           </button>
@@ -170,6 +170,7 @@ export default function VendorLeadDetailPage() {
   const [savingNote, setSavingNote] = useState(false)
 
   const [visitNotes, setVisitNotes] = useState('')
+  const [visitPhoto, setVisitPhoto] = useState<File | null>(null)
   const [savingVisit, setSavingVisit] = useState(false)
 
   const [updatingStatus, setUpdatingStatus] = useState(false)
@@ -221,15 +222,33 @@ export default function VendorLeadDetailPage() {
     }
   }
 
+  // Geolocation is best-effort: if the browser has no support, permission is
+  // denied, or it just times out, the visit is still logged without coordinates
+  // (the backend field is nullable), matching how mobile only sends them when available.
+  function getCurrentCoords(): Promise<GeolocationCoordinates | null> {
+    return new Promise((resolve) => {
+      if (!navigator.geolocation) return resolve(null)
+      navigator.geolocation.getCurrentPosition(
+        (pos) => resolve(pos.coords),
+        () => resolve(null),
+        { timeout: 5000 },
+      )
+    })
+  }
+
   async function handleLogVisit(event: FormEvent) {
     event.preventDefault()
     setSavingVisit(true)
     try {
-      await apiRequest(`/crm/v1/leads/${id}/visits`, {
-        method: 'POST',
-        body: { notes: visitNotes || null },
+      const coords = await getCurrentCoords()
+      await apiUploadForm(`/crm/v1/leads/${id}/visits`, {
+        notes: visitNotes || undefined,
+        latitude: coords?.latitude,
+        longitude: coords?.longitude,
+        photo: visitPhoto ?? undefined,
       })
       setVisitNotes('')
+      setVisitPhoto(null)
       reload()
     } catch (err) {
       alert(err instanceof ApiError ? err.message : 'Failed to log visit.')
@@ -335,6 +354,12 @@ export default function VendorLeadDetailPage() {
               rows={2}
               className={inputClass}
             />
+            <input
+              type="file"
+              accept="image/*"
+              onChange={(e) => setVisitPhoto(e.target.files?.[0] ?? null)}
+              className="text-xs text-slate-500"
+            />
             <button
               type="submit"
               disabled={savingVisit}
@@ -349,7 +374,17 @@ export default function VendorLeadDetailPage() {
             {[...lead.visits].reverse().map((visit, idx) => (
               <div key={idx} className="rounded-md bg-slate-50 p-3 text-sm">
                 {visit.notes && <p className="text-slate-700">{visit.notes}</p>}
-                <p className="mt-1 text-xs text-slate-400">{formatDateTime(visit.visited_at)}</p>
+                {visit.photo_url && (
+                  <a href={visit.photo_url} target="_blank" rel="noreferrer" className="mt-1 inline-block">
+                    <img src={visit.photo_url} alt="Visit" className="h-20 w-20 rounded-md object-cover" />
+                  </a>
+                )}
+                <p className="mt-1 text-xs text-slate-400">
+                  {formatDateTime(visit.visited_at)}
+                  {visit.latitude != null && visit.longitude != null && (
+                    <> · {visit.latitude.toFixed(5)}, {visit.longitude.toFixed(5)}</>
+                  )}
+                </p>
               </div>
             ))}
           </div>

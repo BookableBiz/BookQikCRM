@@ -70,6 +70,9 @@ export interface LeadVisitEntry {
   visited_by: number
   visited_at: string
   notes: string | null
+  latitude: number | null
+  longitude: number | null
+  photo_url: string | null
 }
 
 export interface Lead {
@@ -104,6 +107,15 @@ export interface LeadImportResult {
   errors: LeadImportRowIssue[]
 }
 
+export type TaskStatus = 'pending' | 'in_progress' | 'completed' | 'cancelled'
+
+export const TASK_STATUSES: { value: TaskStatus; label: string }[] = [
+  { value: 'pending', label: 'Pending' },
+  { value: 'in_progress', label: 'In Progress' },
+  { value: 'completed', label: 'Completed' },
+  { value: 'cancelled', label: 'Cancelled' },
+]
+
 export interface LeadTask {
   id: number
   vendor_lead_id: number
@@ -111,7 +123,7 @@ export interface LeadTask {
   task_type: string
   due_date: string
   assigned_to: number | null
-  status: number
+  status: TaskStatus
 }
 
 export interface VendorCategory {
