@@ -302,6 +302,7 @@ export default function LeadsPage() {
   const [source, setSource] = useState('')
   const [status, setStatus] = useState('')
   const [page, setPage] = useState(1)
+  const [assigningId, setAssigningId] = useState<number | null>(null)
   const [refreshKey, setRefreshKey] = useState(0)
 
   useEffect(() => {
@@ -350,6 +351,21 @@ export default function LeadsPage() {
       setRefreshKey((k) => k + 1)
     } catch (err) {
       alert(err instanceof ApiError ? err.message : 'Failed to delete lead.')
+    }
+  }
+
+  async function handleAssign(id: number, assignedTo: string) {
+    setAssigningId(id)
+    try {
+      await apiRequest(`/crm/v1/leads/${id}`, {
+        method: 'PUT',
+        body: { assigned_to: assignedTo ? Number(assignedTo) : null },
+      })
+      setRefreshKey((k) => k + 1)
+    } catch (err) {
+      alert(err instanceof ApiError ? err.message : 'Failed to assign lead.')
+    } finally {
+      setAssigningId(null)
     }
   }
 
@@ -468,7 +484,25 @@ export default function LeadsPage() {
                   <td className="px-4 py-3">
                     <StatusBadge status={lead.status} />
                   </td>
-                  <td className="px-4 py-3 text-slate-600">{staffName(lead.assigned_to)}</td>
+                  <td className="px-4 py-3 text-slate-600">
+                    {canManageLeads(staff) ? (
+                      <select
+                        value={lead.assigned_to ?? ''}
+                        disabled={assigningId === lead.id}
+                        onChange={(e) => handleAssign(lead.id, e.target.value)}
+                        className={`${inputClass} disabled:opacity-50`}
+                      >
+                        <option value="">Unassigned</option>
+                        {staffOptions.map((s) => (
+                          <option key={s.id} value={s.id}>
+                            {s.name}
+                          </option>
+                        ))}
+                      </select>
+                    ) : (
+                      staffName(lead.assigned_to)
+                    )}
+                  </td>
                   <td className="px-4 py-3 text-right">
                     {canManageLeads(staff) && (
                       <button

@@ -4,15 +4,18 @@ import { apiRequest, apiUploadForm, ApiError } from '../lib/api'
 import { NotesPanel } from '../components/crm/NotesPanel'
 import { VisitLogPanel, type VisitLogFields } from '../components/crm/VisitLogPanel'
 import { TasksPanel } from '../components/crm/TasksPanel'
-import { LEAD_SOURCES, LEAD_STATUSES, type CrmStaffMember, type Lead, type LeadStatus } from '../lib/types'
+import { useAuth } from '../lib/auth'
+import { LEAD_SOURCES, LEAD_STATUSES, canManageLeads, type CrmStaffMember, type Lead, type LeadStatus } from '../lib/types'
 
 export default function VendorLeadDetailPage() {
   const { id } = useParams()
+  const { staff } = useAuth()
   const [lead, setLead] = useState<Lead | null>(null)
   const [staffOptions, setStaffOptions] = useState<CrmStaffMember[]>([])
   const [error, setError] = useState<string | null>(null)
 
   const [updatingStatus, setUpdatingStatus] = useState(false)
+  const [updatingAssignment, setUpdatingAssignment] = useState(false)
 
   function reload() {
     apiRequest<Lead>(`/crm/v1/leads/${id}`)
@@ -54,6 +57,26 @@ export default function VendorLeadDetailPage() {
   async function handleLogVisit(fields: VisitLogFields) {
     await apiUploadForm(`/crm/v1/leads/${id}/visits`, fields)
     reload()
+  }
+
+  async function handleAssignChange(assignedTo: string) {
+    setUpdatingAssignment(true)
+    try {
+      await apiRequest(`/crm/v1/leads/${id}`, {
+        method: 'PUT',
+        body: { assigned_to: assignedTo ? Number(assignedTo) : null },
+      })
+      reload()
+    } catch (err) {
+      alert(err instanceof ApiError ? err.message : 'Failed to assign lead.')
+    } finally {
+      setUpdatingAssignment(false)
+    }
+  }
+
+  function staffName(staffId: number | null) {
+    if (!staffId) return '—'
+    return staffOptions.find((s) => s.id === staffId)?.name ?? `#${staffId}`
   }
 
   if (error) return <p className="text-sm text-red-600">{error}</p>
@@ -109,6 +132,26 @@ export default function VendorLeadDetailPage() {
               </option>
             ))}
           </select>
+        </div>
+        <div>
+          <p className="text-xs font-medium text-slate-500">Assigned to</p>
+          {canManageLeads(staff) ? (
+            <select
+              value={lead.assigned_to ?? ''}
+              disabled={updatingAssignment}
+              onChange={(e) => handleAssignChange(e.target.value)}
+              className="mt-0.5 rounded-md border border-slate-300 px-2 py-1 text-sm outline-none focus:border-slate-500 focus:ring-1 focus:ring-slate-500 disabled:opacity-50"
+            >
+              <option value="">Unassigned</option>
+              {staffOptions.map((s) => (
+                <option key={s.id} value={s.id}>
+                  {s.name}
+                </option>
+              ))}
+            </select>
+          ) : (
+            <p className="text-sm text-slate-900">{staffName(lead.assigned_to)}</p>
+          )}
         </div>
       </div>
 

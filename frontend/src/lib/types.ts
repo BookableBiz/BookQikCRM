@@ -144,6 +144,10 @@ export interface Vendor {
   category_id: number | null
   plan_name: string | null
   created_at: string
+  personal_info_completed?: boolean
+  business_info_completed?: boolean
+  services_count?: number
+  bookings_count?: number
   notes?: LeadNoteEntry[]
   visits?: LeadVisitEntry[]
   tasks?: LeadTask[]

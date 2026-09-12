@@ -5,8 +5,23 @@ import type { Paginated, Vendor, VendorCategory, VendorSummary } from '../lib/ty
 import { SEQUENTIAL_BLUE, STATUS, colorForCategory } from '../lib/chartColors'
 import { StatCard } from '../components/StatCard'
 
+const inputClass =
+  'rounded-md border border-slate-300 px-3 py-2 text-sm outline-none focus:border-slate-500 focus:ring-1 focus:ring-slate-500'
+
 const STATUS_OPTIONS = [
   { value: '', label: 'All statuses' },
+  { value: 'active', label: 'Active' },
+  { value: 'inactive', label: 'Inactive' },
+]
+
+const TRISTATE_OPTIONS = [
+  { value: '', label: 'Any' },
+  { value: '1', label: 'Yes' },
+  { value: '0', label: 'No' },
+]
+
+const RAZORPAY_OPTIONS = [
+  { value: '', label: 'Any' },
   { value: 'active', label: 'Active' },
   { value: 'inactive', label: 'Inactive' },
 ]
@@ -59,6 +74,17 @@ export default function VendorsPage() {
   const [categoryId, setCategoryId] = useState('')
   const [status, setStatus] = useState('')
   const [month, setMonth] = useState('')
+  const [personalInfoCompleted, setPersonalInfoCompleted] = useState('')
+  const [businessInfoCompleted, setBusinessInfoCompleted] = useState('')
+  const [razorpayStatus, setRazorpayStatus] = useState('')
+  const [servicesMin, setServicesMin] = useState('')
+  const [servicesMax, setServicesMax] = useState('')
+  const [bookingsMin, setBookingsMin] = useState('')
+  const [bookingsMax, setBookingsMax] = useState('')
+  const [debouncedServicesMin, setDebouncedServicesMin] = useState('')
+  const [debouncedServicesMax, setDebouncedServicesMax] = useState('')
+  const [debouncedBookingsMin, setDebouncedBookingsMin] = useState('')
+  const [debouncedBookingsMax, setDebouncedBookingsMax] = useState('')
   const [sortDir, setSortDir] = useState<'asc' | 'desc'>('desc')
   const [page, setPage] = useState(1)
   const [perPage, setPerPage] = useState(20)
@@ -67,6 +93,16 @@ export default function VendorsPage() {
     const timer = setTimeout(() => setDebouncedSearch(search.trim()), 350)
     return () => clearTimeout(timer)
   }, [search])
+
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      setDebouncedServicesMin(servicesMin)
+      setDebouncedServicesMax(servicesMax)
+      setDebouncedBookingsMin(bookingsMin)
+      setDebouncedBookingsMax(bookingsMax)
+    }, 350)
+    return () => clearTimeout(timer)
+  }, [servicesMin, servicesMax, bookingsMin, bookingsMax])
 
   useEffect(() => {
     apiRequest<VendorCategory[]>('/crm/v1/vendors/categories')
@@ -80,7 +116,21 @@ export default function VendorsPage() {
 
   useEffect(() => {
     setPage(1)
-  }, [debouncedSearch, categoryId, status, month, sortDir, perPage])
+  }, [
+    debouncedSearch,
+    categoryId,
+    status,
+    month,
+    personalInfoCompleted,
+    businessInfoCompleted,
+    razorpayStatus,
+    debouncedServicesMin,
+    debouncedServicesMax,
+    debouncedBookingsMin,
+    debouncedBookingsMax,
+    sortDir,
+    perPage,
+  ])
 
   useEffect(() => {
     const controller = new AbortController()
@@ -90,6 +140,13 @@ export default function VendorsPage() {
     if (categoryId) params.set('category_id', categoryId)
     if (status) params.set('status', status)
     if (month) params.set('month', month)
+    if (personalInfoCompleted) params.set('personal_info_completed', personalInfoCompleted)
+    if (businessInfoCompleted) params.set('business_info_completed', businessInfoCompleted)
+    if (razorpayStatus) params.set('razorpay_status', razorpayStatus)
+    if (debouncedServicesMin) params.set('services_min', debouncedServicesMin)
+    if (debouncedServicesMax) params.set('services_max', debouncedServicesMax)
+    if (debouncedBookingsMin) params.set('bookings_min', debouncedBookingsMin)
+    if (debouncedBookingsMax) params.set('bookings_max', debouncedBookingsMax)
     params.set('sort_dir', sortDir)
     params.set('per_page', String(perPage))
     params.set('page', String(page))
@@ -108,7 +165,22 @@ export default function VendorsPage() {
       })
 
     return () => controller.abort()
-  }, [debouncedSearch, categoryId, status, month, sortDir, perPage, page])
+  }, [
+    debouncedSearch,
+    categoryId,
+    status,
+    month,
+    personalInfoCompleted,
+    businessInfoCompleted,
+    razorpayStatus,
+    debouncedServicesMin,
+    debouncedServicesMax,
+    debouncedBookingsMin,
+    debouncedBookingsMax,
+    sortDir,
+    perPage,
+    page,
+  ])
 
   const maxMonthCount = useMemo(
     () => Math.max(1, ...(summary?.by_month.map((m) => m.count) ?? [1])),
@@ -136,13 +208,32 @@ export default function VendorsPage() {
     }
   }, [summary])
 
-  const hasFilters = Boolean(search || categoryId || status || month)
+  const hasFilters = Boolean(
+    search ||
+      categoryId ||
+      status ||
+      month ||
+      personalInfoCompleted ||
+      businessInfoCompleted ||
+      razorpayStatus ||
+      servicesMin ||
+      servicesMax ||
+      bookingsMin ||
+      bookingsMax,
+  )
 
   function clearFilters() {
     setSearch('')
     setCategoryId('')
     setStatus('')
     setMonth('')
+    setPersonalInfoCompleted('')
+    setBusinessInfoCompleted('')
+    setRazorpayStatus('')
+    setServicesMin('')
+    setServicesMax('')
+    setBookingsMin('')
+    setBookingsMax('')
   }
 
   return (
@@ -243,17 +334,13 @@ export default function VendorsPage() {
             value={search}
             onChange={(e) => setSearch(e.target.value)}
             placeholder="e.g. Ram or 1234"
-            className="rounded-md border border-slate-300 px-3 py-2 text-sm outline-none focus:border-slate-500 focus:ring-1 focus:ring-slate-500"
+            className={inputClass}
           />
         </div>
 
         <div className="flex flex-col gap-1">
           <label className="text-xs font-medium text-slate-500">Category</label>
-          <select
-            value={categoryId}
-            onChange={(e) => setCategoryId(e.target.value)}
-            className="rounded-md border border-slate-300 px-3 py-2 text-sm outline-none focus:border-slate-500 focus:ring-1 focus:ring-slate-500"
-          >
+          <select value={categoryId} onChange={(e) => setCategoryId(e.target.value)} className={inputClass}>
             <option value="">All categories</option>
             {categories.map((c) => (
               <option key={c.id} value={c.id}>
@@ -265,11 +352,7 @@ export default function VendorsPage() {
 
         <div className="flex flex-col gap-1">
           <label className="text-xs font-medium text-slate-500">Status</label>
-          <select
-            value={status}
-            onChange={(e) => setStatus(e.target.value)}
-            className="rounded-md border border-slate-300 px-3 py-2 text-sm outline-none focus:border-slate-500 focus:ring-1 focus:ring-slate-500"
-          >
+          <select value={status} onChange={(e) => setStatus(e.target.value)} className={inputClass}>
             {STATUS_OPTIONS.map((opt) => (
               <option key={opt.value} value={opt.value}>
                 {opt.label}
@@ -280,21 +363,97 @@ export default function VendorsPage() {
 
         <div className="flex flex-col gap-1">
           <label className="text-xs font-medium text-slate-500">Registration month</label>
-          <input
-            type="month"
-            value={month}
-            onChange={(e) => setMonth(e.target.value)}
-            className="rounded-md border border-slate-300 px-3 py-2 text-sm outline-none focus:border-slate-500 focus:ring-1 focus:ring-slate-500"
-          />
+          <input type="month" value={month} onChange={(e) => setMonth(e.target.value)} className={inputClass} />
+        </div>
+
+        <div className="flex flex-col gap-1">
+          <label className="text-xs font-medium text-slate-500">Personal info completed</label>
+          <select
+            value={personalInfoCompleted}
+            onChange={(e) => setPersonalInfoCompleted(e.target.value)}
+            className={inputClass}
+          >
+            {TRISTATE_OPTIONS.map((opt) => (
+              <option key={opt.value} value={opt.value}>
+                {opt.label}
+              </option>
+            ))}
+          </select>
+        </div>
+
+        <div className="flex flex-col gap-1">
+          <label className="text-xs font-medium text-slate-500">Business info completed</label>
+          <select
+            value={businessInfoCompleted}
+            onChange={(e) => setBusinessInfoCompleted(e.target.value)}
+            className={inputClass}
+          >
+            {TRISTATE_OPTIONS.map((opt) => (
+              <option key={opt.value} value={opt.value}>
+                {opt.label}
+              </option>
+            ))}
+          </select>
+        </div>
+
+        <div className="flex flex-col gap-1">
+          <label className="text-xs font-medium text-slate-500">Razorpay Route account</label>
+          <select value={razorpayStatus} onChange={(e) => setRazorpayStatus(e.target.value)} className={inputClass}>
+            {RAZORPAY_OPTIONS.map((opt) => (
+              <option key={opt.value} value={opt.value}>
+                {opt.label}
+              </option>
+            ))}
+          </select>
+        </div>
+
+        <div className="flex flex-col gap-1">
+          <label className="text-xs font-medium text-slate-500">Public services</label>
+          <div className="flex gap-1.5">
+            <input
+              type="number"
+              min={0}
+              value={servicesMin}
+              onChange={(e) => setServicesMin(e.target.value)}
+              placeholder="Min"
+              className={`w-20 ${inputClass}`}
+            />
+            <input
+              type="number"
+              min={0}
+              value={servicesMax}
+              onChange={(e) => setServicesMax(e.target.value)}
+              placeholder="Max"
+              className={`w-20 ${inputClass}`}
+            />
+          </div>
+        </div>
+
+        <div className="flex flex-col gap-1">
+          <label className="text-xs font-medium text-slate-500">Bookings</label>
+          <div className="flex gap-1.5">
+            <input
+              type="number"
+              min={0}
+              value={bookingsMin}
+              onChange={(e) => setBookingsMin(e.target.value)}
+              placeholder="Min"
+              className={`w-20 ${inputClass}`}
+            />
+            <input
+              type="number"
+              min={0}
+              value={bookingsMax}
+              onChange={(e) => setBookingsMax(e.target.value)}
+              placeholder="Max"
+              className={`w-20 ${inputClass}`}
+            />
+          </div>
         </div>
 
         <div className="flex flex-col gap-1">
           <label className="text-xs font-medium text-slate-500">Sort by registration</label>
-          <select
-            value={sortDir}
-            onChange={(e) => setSortDir(e.target.value as 'asc' | 'desc')}
-            className="rounded-md border border-slate-300 px-3 py-2 text-sm outline-none focus:border-slate-500 focus:ring-1 focus:ring-slate-500"
-          >
+          <select value={sortDir} onChange={(e) => setSortDir(e.target.value as 'asc' | 'desc')} className={inputClass}>
             <option value="desc">Newest first</option>
             <option value="asc">Oldest first</option>
           </select>
@@ -324,6 +483,8 @@ export default function VendorsPage() {
                 <th className="px-4 py-3 font-medium">Category</th>
                 <th className="px-4 py-3 font-medium">Contact</th>
                 <th className="px-4 py-3 font-medium">Plan</th>
+                <th className="px-4 py-3 font-medium">Services</th>
+                <th className="px-4 py-3 font-medium">Bookings</th>
                 <th className="px-4 py-3 font-medium">Status</th>
                 <th className="px-4 py-3 font-medium">Registered</th>
               </tr>
@@ -346,6 +507,8 @@ export default function VendorsPage() {
                     {v.phone && <div className="text-xs text-slate-400">{v.phone}</div>}
                   </td>
                   <td className="px-4 py-3 text-slate-600">{v.plan_name ?? '—'}</td>
+                  <td className="px-4 py-3 text-slate-600">{v.services_count}</td>
+                  <td className="px-4 py-3 text-slate-600">{v.bookings_count}</td>
                   <td className="px-4 py-3">
                     <StatusBadge status={v.status} />
                   </td>
