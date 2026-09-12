@@ -224,6 +224,49 @@ export interface VendorSummary {
   by_category: VendorCategoryCount[]
 }
 
+export interface BookingRow {
+  vendor_id: number
+  vendor_name: string
+  engine_name: string
+  total: number
+  completed: number
+  cancelled: number
+  upcoming: number
+  avg_booking: number
+  revenue: number
+}
+
+export interface BookingStat {
+  value: number
+  delta_pct: number | null
+}
+
+export interface BookingsSummary {
+  total: BookingStat
+  completed: BookingStat
+  cancelled: BookingStat
+  revenue: BookingStat
+}
+
+export interface BookingsResponse {
+  summary: BookingsSummary
+  from: string
+  to: string
+  bookings: Paginated<BookingRow>
+}
+
+export const BOOKING_ENGINES: { value: number; label: string }[] = [
+  { value: 1, label: 'Pay & go' },
+  { value: 2, label: 'Open subscription' },
+  { value: 3, label: 'Close Subscription (Non recurring)' },
+  { value: 4, label: 'Packages' },
+  { value: 5, label: 'Appointments' },
+  { value: 6, label: 'Book for free' },
+  { value: 7, label: 'Recurring Subscription (auto-renewal)' },
+  { value: 8, label: 'Pay & Go Plus' },
+  { value: 9, label: 'Pay & Go Events' },
+]
+
 export type AssetCampaignBucket = 'not_started' | 'in_progress' | 'approved'
 
 export type AssetType = 'qr' | 'decal_door' | 'welcome_desk_poster' | 'large_poster'

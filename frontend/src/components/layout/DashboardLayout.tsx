@@ -6,6 +6,7 @@ const navItems = [
   { to: '/dashboard', label: 'Dashboard', end: true },
   { to: '/dashboard/leads', label: 'Vendor Leads', end: false },
   { to: '/dashboard/vendors', label: 'Vendors', end: false },
+  { to: '/dashboard/bookings', label: 'Bookings', end: false },
   { to: '/dashboard/assets-campaign', label: 'Assets Campaign', end: false },
   { to: '/dashboard/tasks', label: 'Tasks', end: false },
 ]
