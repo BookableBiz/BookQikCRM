@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useState } from 'react'
+import { Link } from 'react-router-dom'
 import { apiRequest, ApiError } from '../lib/api'
 import type { Paginated, Vendor, VendorCategory, VendorSummary } from '../lib/types'
 import { SEQUENTIAL_BLUE, STATUS, colorForCategory } from '../lib/chartColors'
@@ -331,7 +332,11 @@ export default function VendorsPage() {
               {vendors?.data.map((v) => (
                 <tr key={v.id} className="border-b border-slate-100 last:border-0 hover:bg-slate-50">
                   <td className="px-4 py-3 text-slate-500">#{v.id}</td>
-                  <td className="px-4 py-3 font-medium text-slate-900">{v.name}</td>
+                  <td className="px-4 py-3 font-medium text-slate-900">
+                    <Link to={`/dashboard/vendors/${v.id}`} className="hover:underline">
+                      {v.name}
+                    </Link>
+                  </td>
                   <td className="px-4 py-3 text-slate-600">{v.business_name ?? '—'}</td>
                   <td className="px-4 py-3">
                     <CategoryChip id={v.category_id} name={v.category} />

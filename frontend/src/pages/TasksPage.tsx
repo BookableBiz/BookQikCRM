@@ -2,10 +2,8 @@ import { useEffect, useState } from 'react'
 import { Link } from 'react-router-dom'
 import { apiRequest, ApiError } from '../lib/api'
 import { TaskStatusSelect, taskStatusLabel } from '../components/TaskStatusSelect'
+import { inputClass } from '../components/crm/shared'
 import { TASK_STATUSES, type CrmStaffMember, type LeadTask, type Paginated, type TaskStatus } from '../lib/types'
-
-const inputClass =
-  'rounded-md border border-slate-300 px-3 py-2 text-sm outline-none focus:border-slate-500 focus:ring-1 focus:ring-slate-500'
 
 const STATUS_OPTIONS = [{ value: '', label: 'All statuses' }, ...TASK_STATUSES]
 
@@ -13,6 +11,24 @@ function staffLabel(staff: CrmStaffMember[], id: number | null) {
   if (!id) return '—'
   const match = staff.find((s) => s.id === id)
   return match ? match.name : `#${id}`
+}
+
+function TaskTargetLink({ task }: { task: LeadTask }) {
+  if (task.vendor_id != null) {
+    return (
+      <Link to={`/dashboard/vendors/${task.vendor_id}`} className="hover:underline">
+        {task.vendor?.name ?? `#${task.vendor_id}`}
+      </Link>
+    )
+  }
+  if (task.vendor_lead_id != null) {
+    return (
+      <Link to={`/dashboard/leads/${task.vendor_lead_id}`} className="hover:underline">
+        {task.lead?.name ?? `#${task.vendor_lead_id}`}
+      </Link>
+    )
+  }
+  return <span className="text-slate-400">—</span>
 }
 
 function TaskRow({ task, staff, onSaved }: { task: LeadTask; staff: CrmStaffMember[]; onSaved: () => void }) {
@@ -53,9 +69,7 @@ function TaskRow({ task, staff, onSaved }: { task: LeadTask; staff: CrmStaffMemb
     return (
       <tr className="border-b border-slate-100 bg-slate-50 last:border-0">
         <td className="px-4 py-3 text-slate-900">
-          <Link to={`/dashboard/leads/${task.vendor_lead_id}`} className="hover:underline">
-            {task.lead?.name ?? `#${task.vendor_lead_id}`}
-          </Link>
+          <TaskTargetLink task={task} />
         </td>
         <td className="px-4 py-3 text-slate-600">{task.task_type}</td>
         <td className="px-4 py-3">
@@ -88,9 +102,7 @@ function TaskRow({ task, staff, onSaved }: { task: LeadTask; staff: CrmStaffMemb
   return (
     <tr className="border-b border-slate-100 last:border-0">
       <td className="px-4 py-3 text-slate-900">
-        <Link to={`/dashboard/leads/${task.vendor_lead_id}`} className="hover:underline">
-          {task.lead?.name ?? `#${task.vendor_lead_id}`}
-        </Link>
+        <TaskTargetLink task={task} />
       </td>
       <td className="px-4 py-3 text-slate-600">{task.task_type}</td>
       <td className="px-4 py-3 text-slate-600">{staffLabel(staff, task.assigned_to)}</td>
@@ -188,7 +200,7 @@ export default function TasksPage() {
           <table className="w-full text-left text-sm">
             <thead className="border-b border-slate-200 text-slate-500">
               <tr>
-                <th className="px-4 py-3 font-medium">Lead</th>
+                <th className="px-4 py-3 font-medium">Related to</th>
                 <th className="px-4 py-3 font-medium">Type</th>
                 <th className="px-4 py-3 font-medium">Assigned To</th>
                 <th className="px-4 py-3 font-medium">Due Date</th>

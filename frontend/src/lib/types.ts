@@ -118,8 +118,10 @@ export const TASK_STATUSES: { value: TaskStatus; label: string }[] = [
 
 export interface LeadTask {
   id: number
-  vendor_lead_id: number
+  vendor_lead_id: number | null
+  vendor_id: number | null
   lead?: { id: number; name: string }
+  vendor?: { id: number; name: string }
   task_type: string
   due_date: string
   assigned_to: number | null
@@ -142,6 +144,61 @@ export interface Vendor {
   category_id: number | null
   plan_name: string | null
   created_at: string
+  notes?: LeadNoteEntry[]
+  visits?: LeadVisitEntry[]
+  tasks?: LeadTask[]
+}
+
+export interface VendorLocation {
+  name: string
+  address: string | null
+  city: string | null
+  postal_code: string | null
+  country: string | null
+}
+
+export interface VendorServiceEntry {
+  id: number
+  title: string
+  category: string | null
+  price: unknown
+}
+
+export interface VendorBookingWeek {
+  week_start: string
+  total: number
+  completed: number
+  cancelled: number
+  upcoming: number
+  inprogress: number
+}
+
+export interface VendorRevenueTransaction {
+  id: number
+  date: string
+  service_name: string
+  gross_amount: number
+  net_amount: number
+  status: string
+}
+
+export interface VendorRevenue {
+  from: string
+  to: string
+  total_collected: number
+  total_net: number
+  failed_count: number
+  transactions_count: number
+  recent: VendorRevenueTransaction[]
+}
+
+export interface VendorInsights {
+  category: string | null
+  sub_category: string | null
+  locations: VendorLocation[]
+  services: VendorServiceEntry[]
+  booking_summary: VendorBookingWeek[]
+  revenue: VendorRevenue
 }
 
 export interface VendorMonthCount {
