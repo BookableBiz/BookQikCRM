@@ -2,6 +2,7 @@ import { useEffect, useRef, useState, type ChangeEvent, type FormEvent, type Rea
 import { Link } from 'react-router-dom'
 import { apiRequest, apiDownload, apiUpload, ApiError } from '../lib/api'
 import { useAuth } from '../lib/auth'
+import { formatDateTime } from '../components/crm/shared'
 import {
   LEAD_SOURCES,
   LEAD_STATUSES,
@@ -31,6 +32,28 @@ function StatusBadge({ status }: { status: Lead['status'] }) {
       {status}
     </span>
   )
+}
+
+function daysSince(dateStr: string): number {
+  const then = new Date(dateStr.replace(' ', 'T')).getTime()
+  return Math.floor((Date.now() - then) / 86400000)
+}
+
+// Lost leads are closed - staleness doesn't apply, so they always get the same
+// neutral treatment as their status badge instead of the red urgency scale.
+function LastActivityCell({ lead }: { lead: Lead }) {
+  const days = daysSince(lead.last_activity_at)
+  const label = `${formatDateTime(lead.last_activity_at)} (${days === 0 ? 'today' : `${days}d ago`})`
+
+  if (lead.status === 'lost') {
+    return <span className="text-xs text-slate-400">{label}</span>
+  }
+
+  let className = 'text-xs text-slate-600'
+  if (days >= 14) className = 'inline-block rounded px-1.5 py-0.5 text-xs font-semibold bg-red-200 text-red-900'
+  else if (days >= 7) className = 'inline-block rounded px-1.5 py-0.5 text-xs font-medium bg-red-100 text-red-700'
+
+  return <span className={className}>{label}</span>
 }
 
 const inputClass =
@@ -67,6 +90,8 @@ function NewLeadForm({
     business_name: '',
     city: 'Jaipur',
     address: '',
+    area: '',
+    pincode: '',
     category_id: '',
     source: 'direct_visit' as LeadSource,
     source_detail: '',
@@ -133,6 +158,12 @@ function NewLeadForm({
         </Field>
         <Field label="Address">
           <input value={form.address} onChange={(e) => set('address', e.target.value)} className={inputClass} />
+        </Field>
+        <Field label="Area">
+          <input value={form.area} onChange={(e) => set('area', e.target.value)} className={inputClass} />
+        </Field>
+        <Field label="Pincode">
+          <input value={form.pincode} onChange={(e) => set('pincode', e.target.value)} className={inputClass} />
         </Field>
 
         <Field label="Category">
@@ -301,6 +332,10 @@ export default function LeadsPage() {
   const [city, setCity] = useState('')
   const [source, setSource] = useState('')
   const [status, setStatus] = useState('')
+  const [addedFrom, setAddedFrom] = useState('')
+  const [addedTo, setAddedTo] = useState('')
+  const [updatedFrom, setUpdatedFrom] = useState('')
+  const [updatedTo, setUpdatedTo] = useState('')
   const [page, setPage] = useState(1)
   const [assigningId, setAssigningId] = useState<number | null>(null)
   const [refreshKey, setRefreshKey] = useState(0)
@@ -317,7 +352,7 @@ export default function LeadsPage() {
 
   useEffect(() => {
     setPage(1)
-  }, [search, city, source, status])
+  }, [search, city, source, status, addedFrom, addedTo, updatedFrom, updatedTo])
 
   useEffect(() => {
     const controller = new AbortController()
@@ -326,6 +361,10 @@ export default function LeadsPage() {
     if (city) params.set('city', city)
     if (source) params.set('source', source)
     if (status) params.set('status', status)
+    if (addedFrom) params.set('added_from', addedFrom)
+    if (addedTo) params.set('added_to', addedTo)
+    if (updatedFrom) params.set('updated_from', updatedFrom)
+    if (updatedTo) params.set('updated_to', updatedTo)
     params.set('page', String(page))
 
     setLoading(true)
@@ -342,7 +381,7 @@ export default function LeadsPage() {
       })
 
     return () => controller.abort()
-  }, [search, city, source, status, page, refreshKey])
+  }, [search, city, source, status, addedFrom, addedTo, updatedFrom, updatedTo, page, refreshKey])
 
   async function handleDelete(id: number) {
     if (!confirm('Delete this lead? This cannot be undone.')) return
@@ -451,6 +490,36 @@ export default function LeadsPage() {
             ))}
           </select>
         </div>
+        <div className="flex flex-col gap-1">
+          <label className="text-xs font-medium text-slate-500">Date added</label>
+          <div className="flex items-center gap-1.5">
+            <input type="date" value={addedFrom} onChange={(e) => setAddedFrom(e.target.value)} className={inputClass} />
+            <span className="text-xs text-slate-400">to</span>
+            <input type="date" value={addedTo} onChange={(e) => setAddedTo(e.target.value)} className={inputClass} />
+          </div>
+        </div>
+        <div className="flex flex-col gap-1">
+          <label className="text-xs font-medium text-slate-500">Last updated</label>
+          <div className="flex items-center gap-1.5">
+            <input type="date" value={updatedFrom} onChange={(e) => setUpdatedFrom(e.target.value)} className={inputClass} />
+            <span className="text-xs text-slate-400">to</span>
+            <input type="date" value={updatedTo} onChange={(e) => setUpdatedTo(e.target.value)} className={inputClass} />
+          </div>
+        </div>
+        {(addedFrom || addedTo || updatedFrom || updatedTo) && (
+          <button
+            type="button"
+            onClick={() => {
+              setAddedFrom('')
+              setAddedTo('')
+              setUpdatedFrom('')
+              setUpdatedTo('')
+            }}
+            className="text-sm font-medium text-slate-500 hover:text-slate-700"
+          >
+            Clear dates
+          </button>
+        )}
       </div>
 
       {error && <p className="text-sm text-red-600">{error}</p>}
@@ -465,6 +534,8 @@ export default function LeadsPage() {
                 <th className="px-4 py-3 font-medium">City</th>
                 <th className="px-4 py-3 font-medium">Source</th>
                 <th className="px-4 py-3 font-medium">Status</th>
+                <th className="px-4 py-3 font-medium">Date Added</th>
+                <th className="px-4 py-3 font-medium">Last Updated</th>
                 <th className="px-4 py-3 font-medium">Assigned</th>
                 <th className="px-4 py-3 font-medium" />
               </tr>
@@ -483,6 +554,10 @@ export default function LeadsPage() {
                   <td className="px-4 py-3 text-slate-600">{sourceLabel(lead.source)}</td>
                   <td className="px-4 py-3">
                     <StatusBadge status={lead.status} />
+                  </td>
+                  <td className="px-4 py-3 text-xs text-slate-500">{formatDateTime(lead.created_at)}</td>
+                  <td className="px-4 py-3">
+                    <LastActivityCell lead={lead} />
                   </td>
                   <td className="px-4 py-3 text-slate-600">
                     {canManageLeads(staff) ? (

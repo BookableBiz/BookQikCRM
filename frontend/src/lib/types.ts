@@ -84,6 +84,8 @@ export interface Lead {
   category_id: number | null
   city: string
   address: string | null
+  area: string | null
+  pincode: string | null
   source: LeadSource
   source_detail: string | null
   status: LeadStatus
@@ -94,6 +96,7 @@ export interface Lead {
   visits: LeadVisitEntry[]
   tasks?: LeadTask[]
   created_at: string
+  last_activity_at: string
 }
 
 export interface LeadImportRowIssue {
