@@ -7,6 +7,7 @@ const navItems = [
   { to: '/dashboard/leads', label: 'Vendor Leads', end: false },
   { to: '/dashboard/vendors', label: 'Vendors', end: false },
   { to: '/dashboard/bookings', label: 'Bookings', end: false },
+  { to: '/dashboard/app-reviews', label: 'App Reviews', end: false },
   { to: '/dashboard/assets-campaign', label: 'Assets Campaign', end: false },
   { to: '/dashboard/tasks', label: 'Tasks', end: false },
 ]

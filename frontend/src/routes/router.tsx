@@ -9,6 +9,7 @@ import VendorsPage from '../pages/VendorsPage'
 import VendorDetailPage from '../pages/VendorDetailPage'
 import AssetsCampaignPage from '../pages/AssetsCampaignPage'
 import BookingsPage from '../pages/BookingsPage'
+import AppReviewsPage from '../pages/AppReviewsPage'
 import DashboardLayout from '../components/layout/DashboardLayout'
 import { ProtectedRoute } from '../lib/auth'
 
@@ -35,6 +36,7 @@ const router = createBrowserRouter([
       { path: 'vendors', element: <VendorsPage /> },
       { path: 'vendors/:id', element: <VendorDetailPage /> },
       { path: 'bookings', element: <BookingsPage /> },
+      { path: 'app-reviews', element: <AppReviewsPage /> },
       { path: 'assets-campaign', element: <AssetsCampaignPage /> },
       { path: 'tasks', element: <TasksPage /> },
       { path: 'staff', element: <StaffPage /> },

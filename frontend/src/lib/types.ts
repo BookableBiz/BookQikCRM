@@ -255,6 +255,36 @@ export interface BookingsResponse {
   bookings: Paginated<BookingRow>
 }
 
+export interface AppReview {
+  id: number
+  platform: string
+  external_id: string
+  rating: number | null
+  title: string | null
+  body: string | null
+  author_name: string | null
+  app_version: string | null
+  reviewed_at: string | null
+  synced_at: string
+}
+
+export interface AppReviewsSummary {
+  total: number
+  avg_rating: number | null
+}
+
+export interface AppVitalsSnapshot {
+  metric_date: string
+  crash_rate: number | null
+  anr_rate: number | null
+}
+
+export interface AppReviewsResponse {
+  summary: AppReviewsSummary
+  latest_vitals: AppVitalsSnapshot | null
+  reviews: Paginated<AppReview>
+}
+
 export const BOOKING_ENGINES: { value: number; label: string }[] = [
   { value: 1, label: 'Pay & go' },
   { value: 2, label: 'Open subscription' },
