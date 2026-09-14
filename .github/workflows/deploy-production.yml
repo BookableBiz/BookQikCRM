@@ -12,6 +12,16 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
+
+      # 1. STRICT PRODUCTION BRANCH CHECK
+      - name:  Branch Restriction Check
+        if: github.ref != 'refs/heads/production'
+        run: |
+          echo " ERROR: Deployment is allowed ONLY from production branch."
+          echo "Selected branch: ${{ github.ref }}"
+          exit 1
+
+      # 2. DEPLOY TO SERVER
       - name: Deploy Frontend
         uses: appleboy/ssh-action@v1.2.0
         with:
