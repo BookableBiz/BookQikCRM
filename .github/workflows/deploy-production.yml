@@ -5,7 +5,7 @@ on:
     branches:
       - production
 
-  
+  workflow_dispatch:
 
 jobs:
   deploy:
@@ -14,10 +14,10 @@ jobs:
     steps:
 
       # 1. STRICT PRODUCTION BRANCH CHECK
-      - name:  Branch Restriction Check
+      - name: Branch Restriction Check
         if: github.ref != 'refs/heads/production'
         run: |
-          echo " ERROR: Deployment is allowed ONLY from production branch."
+          echo "ERROR: Deployment is allowed ONLY from production branch."
           echo "Selected branch: ${{ github.ref }}"
           exit 1
 
