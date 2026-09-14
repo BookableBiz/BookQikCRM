@@ -1,0 +1,19 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(mysql -u root bookablebiz_local -e ' *)",
+      "Bash(mysql -u root bookablebiz_local -e \"SELECT COUNT\\(*\\) FROM crm_visits WHERE vendor_id IS NOT NULL;\")",
+      "Bash(mysql -u root bookablebiz_local -e \"SHOW TABLES LIKE 'customers_payment';\")",
+      "Bash(mysql -u root bookablebiz_local -e \"SELECT COUNT\\(*\\) FROM customers_payment;\")",
+      "Bash(mysql -u root bookablebiz_local -e \"DESCRIBE customers_payment;\")",
+      "Bash(curl -s -o /dev/null -w \"server alive: %{http_code}\\\\n\" http://127.0.0.1:8000/api/crm/v1/staff)",
+      "Bash(python3 -c ' *)",
+      "Bash(echo \"exit:$?\")",
+      "Bash(grep -n 'if \\($vendorId\\)' app/Services/CrmVendorService.php)",
+      "Bash(grep -n 'private function weeklyCountBuckets\\\\|for \\($i = 7' app/Services/CrmVendorService.php app/Services/CrmDashboardService.php)",
+      "Bash(grep -n 'vendorId\\\\|for \\($i' app/Services/CrmVendorService.php)",
+      "Bash(grep -n 'for \\($i = 7' app/Services/CrmVendorService.php)",
+      "Bash(python3 -c \"import json,sys; d=json.load\\(sys.stdin\\)['data']; print\\(d['booking_summary'][-2:]\\)\")"
+    ]
+  }
+}

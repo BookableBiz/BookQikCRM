@@ -370,7 +370,45 @@ export interface DashboardTasksSummary {
   due_today: number
 }
 
+export interface DashboardWeekCount {
+  week_start: string
+  count: number
+}
+
+export interface DashboardBookingWeek {
+  week_start: string
+  total: number
+  completed: number
+  cancelled: number
+  upcoming: number
+  inprogress: number
+}
+
+export interface DashboardVendorsSummary {
+  total: number
+  active: number
+  new_this_week: number
+  onboarding_velocity: DashboardWeekCount[]
+}
+
+export interface DashboardBookingsSummary {
+  weekly: DashboardBookingWeek[]
+}
+
+export interface DashboardVisitsSummary {
+  this_week: number
+  weekly: DashboardWeekCount[]
+}
+
+export interface DashboardRevenueSummary {
+  last_30_days: number
+}
+
 export interface DashboardSummary {
   leads: DashboardLeadsSummary
   tasks: DashboardTasksSummary
+  vendors: DashboardVendorsSummary
+  bookings: DashboardBookingsSummary
+  visits: DashboardVisitsSummary
+  revenue: DashboardRevenueSummary
 }
