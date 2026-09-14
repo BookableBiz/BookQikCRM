@@ -324,3 +324,53 @@ export interface AssetsCampaignSummary {
   flagged_count: number
   buckets: Record<AssetCampaignBucket, number>
 }
+
+export interface DashboardStatusCount {
+  status: string
+  count: number
+}
+
+export interface DashboardSourceCount {
+  source: string
+  count: number
+}
+
+export interface DashboardCityCount {
+  city: string
+  count: number
+}
+
+export interface DashboardAssigneeCount {
+  assigned_to: number | null
+  name: string
+  count: number
+}
+
+export interface DashboardMonthCount {
+  month: string
+  count: number
+}
+
+export interface DashboardLeadsSummary {
+  total: number
+  new_this_week: number
+  new_this_month: number
+  conversion_rate: number
+  by_status: DashboardStatusCount[]
+  by_source: DashboardSourceCount[]
+  by_city: DashboardCityCount[]
+  by_assignee: DashboardAssigneeCount[]
+  by_month: DashboardMonthCount[]
+}
+
+export interface DashboardTasksSummary {
+  total: number
+  by_status: DashboardStatusCount[]
+  overdue: number
+  due_today: number
+}
+
+export interface DashboardSummary {
+  leads: DashboardLeadsSummary
+  tasks: DashboardTasksSummary
+}

@@ -19,6 +19,32 @@ const STATUS_OPTIONS = [{ value: '', label: 'All statuses' }, ...LEAD_STATUSES]
 
 const sourceLabel = (source: LeadSource) => LEAD_SOURCES.find((s) => s.value === source)?.label ?? source
 
+// Shared by the list fetch and the export download so an exported report can never
+// silently drift from what the current filters are actually showing on screen.
+function buildLeadFilterParams(filters: {
+  search: string
+  city: string
+  source: string
+  status: string
+  addedFrom: string
+  addedTo: string
+  updatedFrom: string
+  updatedTo: string
+  assignedTo: string
+}) {
+  const params = new URLSearchParams()
+  if (filters.search) params.set('search', filters.search)
+  if (filters.city) params.set('city', filters.city)
+  if (filters.source) params.set('source', filters.source)
+  if (filters.status) params.set('status', filters.status)
+  if (filters.addedFrom) params.set('added_from', filters.addedFrom)
+  if (filters.addedTo) params.set('added_to', filters.addedTo)
+  if (filters.updatedFrom) params.set('updated_from', filters.updatedFrom)
+  if (filters.updatedTo) params.set('updated_to', filters.updatedTo)
+  if (filters.assignedTo) params.set('assigned_to', filters.assignedTo)
+  return params
+}
+
 function StatusBadge({ status }: { status: Lead['status'] }) {
   const styles: Record<Lead['status'], string> = {
     new: 'bg-blue-100 text-blue-700',
@@ -336,9 +362,20 @@ export default function LeadsPage() {
   const [addedTo, setAddedTo] = useState('')
   const [updatedFrom, setUpdatedFrom] = useState('')
   const [updatedTo, setUpdatedTo] = useState('')
+  const [assignedTo, setAssignedTo] = useState('')
   const [page, setPage] = useState(1)
   const [assigningId, setAssigningId] = useState<number | null>(null)
   const [refreshKey, setRefreshKey] = useState(0)
+  const [exporting, setExporting] = useState<'pdf' | 'excel' | null>(null)
+
+  // A PDF export can take a while to generate server-side; guard against updating
+  // state after the user has already navigated away from this page.
+  const isMountedRef = useRef(true)
+  useEffect(() => {
+    return () => {
+      isMountedRef.current = false
+    }
+  }, [])
 
   useEffect(() => {
     apiRequest<VendorCategory[]>('/crm/v1/vendors/categories')
@@ -352,19 +389,11 @@ export default function LeadsPage() {
 
   useEffect(() => {
     setPage(1)
-  }, [search, city, source, status, addedFrom, addedTo, updatedFrom, updatedTo])
+  }, [search, city, source, status, addedFrom, addedTo, updatedFrom, updatedTo, assignedTo])
 
   useEffect(() => {
     const controller = new AbortController()
-    const params = new URLSearchParams()
-    if (search) params.set('search', search)
-    if (city) params.set('city', city)
-    if (source) params.set('source', source)
-    if (status) params.set('status', status)
-    if (addedFrom) params.set('added_from', addedFrom)
-    if (addedTo) params.set('added_to', addedTo)
-    if (updatedFrom) params.set('updated_from', updatedFrom)
-    if (updatedTo) params.set('updated_to', updatedTo)
+    const params = buildLeadFilterParams({ search, city, source, status, addedFrom, addedTo, updatedFrom, updatedTo, assignedTo })
     params.set('page', String(page))
 
     setLoading(true)
@@ -381,7 +410,25 @@ export default function LeadsPage() {
       })
 
     return () => controller.abort()
-  }, [search, city, source, status, addedFrom, addedTo, updatedFrom, updatedTo, page, refreshKey])
+  }, [search, city, source, status, addedFrom, addedTo, updatedFrom, updatedTo, assignedTo, page, refreshKey])
+
+  // Exports mirror the current filters, not the current page - a report that silently
+  // dropped everything past page 1 would be worse than none at all.
+  async function handleExport(format: 'pdf' | 'excel') {
+    setExporting(format)
+    setError(null)
+
+    const params = buildLeadFilterParams({ search, city, source, status, addedFrom, addedTo, updatedFrom, updatedTo, assignedTo })
+    params.set('format', format)
+
+    try {
+      await apiDownload(`/crm/v1/leads/export?${params.toString()}`, `vendor-leads.${format === 'excel' ? 'csv' : 'pdf'}`)
+    } catch (err) {
+      if (isMountedRef.current) setError(err instanceof ApiError ? err.message : 'Failed to download report.')
+    } finally {
+      if (isMountedRef.current) setExporting(null)
+    }
+  }
 
   async function handleDelete(id: number) {
     if (!confirm('Delete this lead? This cannot be undone.')) return
@@ -418,6 +465,22 @@ export default function LeadsPage() {
       <div className="flex items-center justify-between">
         <h1 className="text-xl font-semibold text-slate-900">Vendor Leads</h1>
         <div className="flex gap-2">
+          <button
+            type="button"
+            onClick={() => handleExport('excel')}
+            disabled={exporting !== null}
+            className="rounded-md border border-slate-300 px-4 py-2 text-sm font-medium text-slate-700 hover:bg-slate-50 disabled:opacity-50"
+          >
+            {exporting === 'excel' ? 'Preparing…' : 'Download Excel'}
+          </button>
+          <button
+            type="button"
+            onClick={() => handleExport('pdf')}
+            disabled={exporting !== null}
+            className="rounded-md border border-slate-300 px-4 py-2 text-sm font-medium text-slate-700 hover:bg-slate-50 disabled:opacity-50"
+          >
+            {exporting === 'pdf' ? 'Preparing…' : 'Download PDF'}
+          </button>
           <button
             type="button"
             onClick={() => {
@@ -486,6 +549,18 @@ export default function LeadsPage() {
             {STATUS_OPTIONS.map((s) => (
               <option key={s.value} value={s.value}>
                 {s.label}
+              </option>
+            ))}
+          </select>
+        </div>
+        <div className="flex flex-col gap-1">
+          <label className="text-xs font-medium text-slate-500">Assigned To</label>
+          <select value={assignedTo} onChange={(e) => setAssignedTo(e.target.value)} className={inputClass}>
+            <option value="">All</option>
+            <option value="unassigned">Unassigned</option>
+            {staffOptions.map((s) => (
+              <option key={s.id} value={s.id}>
+                {s.name}
               </option>
             ))}
           </select>

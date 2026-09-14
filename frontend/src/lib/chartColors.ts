@@ -12,8 +12,11 @@ export const CATEGORY_PALETTE = [
   '#e34948', // red
 ]
 
+// Neutral fallback for "no category"/"unknown" - shared so every caller's grey matches.
+export const NEUTRAL = '#898781'
+
 export function colorForCategory(id: number | null | undefined): string {
-  if (id === null || id === undefined) return '#898781'
+  if (id === null || id === undefined) return NEUTRAL
   return CATEGORY_PALETTE[id % CATEGORY_PALETTE.length]
 }
 
