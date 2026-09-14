@@ -3,6 +3,7 @@ import { apiRequest, ApiError } from '../lib/api'
 import { BOOKING_ENGINES, type BookingsResponse, type BookingStat, type VendorCategory } from '../lib/types'
 import { SEQUENTIAL_BLUE, STATUS } from '../lib/chartColors'
 import { StatCard } from '../components/StatCard'
+import { formatCurrency } from '../components/crm/shared'
 
 const inputClass =
   'rounded-md border border-slate-300 px-3 py-2 text-sm outline-none focus:border-slate-500 focus:ring-1 focus:ring-slate-500'
@@ -61,10 +62,6 @@ function presetRange(preset: DatePreset, customFrom: string, customTo: string): 
     return { from: toDateInput(lastMonthStart), to: toDateInput(lastMonthEnd) }
   }
   return { from: customFrom, to: customTo }
-}
-
-function formatCurrency(value: number) {
-  return `₹${value.toLocaleString('en-IN', { maximumFractionDigits: 0 })}`
 }
 
 function SortableHeader({
