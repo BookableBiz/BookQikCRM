@@ -13,16 +13,16 @@ jobs:
 
     steps:
 
-      # 0. STRICT BRANCH RESTRICTION
+      # 1. STRICT PRODUCTION BRANCH CHECK
       - name:  Branch Restriction Check
         if: github.ref != 'refs/heads/production'
         run: |
-          echo " ERROR: Deployment is strictly allowed ONLY from the 'production' branch."
-          echo "You accidentally selected: ${{ github.ref }}"
+          echo " ERROR: Deployment is allowed ONLY from production branch."
+          echo "Selected branch: ${{ github.ref }}"
           exit 1
 
-      # 1. Deploy Frontend
-      - name: 🚀 Deploy Frontend
+      # 2. DEPLOY TO SERVER
+      - name: Deploy Frontend
         uses: appleboy/ssh-action@v1.2.0
         with:
           host: ${{ secrets.LIGHTSAIL_HOST }}
