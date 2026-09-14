@@ -12,6 +12,12 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
+      - name: Check Production Branch
+        if: github.ref != 'refs/heads/production'
+        run: |
+          echo "Error: Deployment is allowed only from production branch."
+          exit 1
+
       - name: Deploy Frontend
         uses: appleboy/ssh-action@v1.2.0
         with:
