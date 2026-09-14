@@ -1,0 +1,40 @@
+services:
+
+  frontend:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: bookqik_frontend
+    restart: unless-stopped
+    expose:
+      - "80"
+    networks:
+      - bookqik
+
+  nginx:
+    image: nginx:alpine
+    container_name: bookqik_nginx
+    restart: unless-stopped
+    ports:
+      - "80:80"
+      - "443:443"
+    volumes:
+      - ./nginx/conf.d:/etc/nginx/conf.d:ro
+      - ./certbot/www:/var/www/certbot:ro
+      - ./certbot/conf:/etc/letsencrypt:ro
+    depends_on:
+      - frontend
+    networks:
+      - bookqik
+
+  certbot:
+    image: certbot/certbot
+    container_name: bookqik_certbot
+    volumes:
+      - ./certbot/www:/var/www/certbot
+      - ./certbot/conf:/etc/letsencrypt
+    networks:
+      - bookqik
+
+networks:
+  bookqik:

@@ -1,13 +1,24 @@
-import { useState, type FormEvent } from 'react'
+import { useEffect, useState, type FormEvent } from 'react'
+import { useNavigate } from 'react-router-dom'
 import AuthLayout from '../components/layout/AuthLayout'
+import { ApiError } from '../lib/api'
+import { useAuth } from '../lib/auth'
 
 export default function LoginPage() {
+  const navigate = useNavigate()
+  const { staff, login } = useAuth()
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
   const [error, setError] = useState<string | null>(null)
   const [isSubmitting, setIsSubmitting] = useState(false)
 
-  function handleSubmit(event: FormEvent<HTMLFormElement>) {
+  useEffect(() => {
+    if (staff) {
+      navigate('/dashboard', { replace: true })
+    }
+  }, [staff, navigate])
+
+  async function handleSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault()
     setError(null)
 
@@ -17,9 +28,14 @@ export default function LoginPage() {
     }
 
     setIsSubmitting(true)
-    // TODO: wire this up once the login endpoint/auth flow is decided.
-    console.log('Login submitted (stub)', { email })
-    setIsSubmitting(false)
+    try {
+      await login(email, password)
+      navigate('/dashboard', { replace: true })
+    } catch (err) {
+      setError(err instanceof ApiError ? err.message : 'Unable to reach the server. Please try again.')
+    } finally {
+      setIsSubmitting(false)
+    }
   }
 
   return (
