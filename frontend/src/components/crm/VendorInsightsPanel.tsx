@@ -3,7 +3,7 @@ import { apiRequest, ApiError } from '../../lib/api'
 import type { VendorInsights } from '../../lib/types'
 import { SEQUENTIAL_BLUE, STATUS } from '../../lib/chartColors'
 import { StatCard } from '../StatCard'
-import { formatDateTime, inputClass } from './shared'
+import { formatDateTime, formatWeekLabel, formatCurrency, inputClass } from './shared'
 
 const DATE_PRESETS = [
   { label: '7d', days: 7 },
@@ -13,18 +13,6 @@ const DATE_PRESETS = [
 
 function toDateInput(d: Date) {
   return d.toISOString().slice(0, 10)
-}
-
-function formatWeekLabel(value: string) {
-  // value is a date-only string (YYYY-MM-DD, possibly with a time suffix);
-  // parse the date part as local time, not UTC midnight, so timezones behind
-  // UTC don't display the previous day.
-  const [year, month, day] = value.slice(0, 10).split('-').map(Number)
-  return new Date(year, month - 1, day).toLocaleDateString(undefined, { month: 'short', day: 'numeric' })
-}
-
-function formatCurrency(value: number) {
-  return `₹${value.toLocaleString(undefined, { maximumFractionDigits: 0 })}`
 }
 
 export function VendorInsightsPanel({ vendorId }: { vendorId: number }) {
